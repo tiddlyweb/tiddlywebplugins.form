@@ -2,7 +2,7 @@
 AUTHOR = 'Ben Gillies'
 AUTHOR_EMAIL = 'bengillies@gmail.com'
 NAME = 'tiddlywebplugins.form'
-DESCRIPTION = 'Adds POST support and binary file upload support to TiddlyWeb'
+DESCRIPTION = 'Adds POST and binary file upload (via HTML) support to TiddlyWeb'
 VERSION = '0.1'
 
 
