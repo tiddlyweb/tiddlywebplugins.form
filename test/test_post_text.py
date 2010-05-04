@@ -143,11 +143,7 @@ def test_post_no_title():
     setup_web()
     http = httplib2.Http()
     
-    #make sure there is nothing in bag 'foo'
-    bag = Bag('foo')
-    bag = store.get(bag)
-    assert len(bag.list_tiddlers()) == 0
-    
+    #post some fields to a tiddler 
     response = http.request('http://test_domain:8001/bags/foo/tiddlers',
         method='POST', 
         headers={'Content-type': 'application/x-www-form-urlencoded'},
@@ -164,6 +160,38 @@ def test_post_no_title():
     tiddler = store.get(tiddlers[0])
     assert tiddler.title != ''
     assert tiddler.text == 'Hi There'
+
+def test_post_fields():
+    """
+    post some fields to a tiddler
+    """
+    store = setup_store()
+    setup_web()
+    http = httplib2.Http()
+    
+    #make sure there is nothing in bag 'foo'
+    bag = Bag('foo')
+    bag = store.get(bag)
+    assert len(bag.list_tiddlers()) == 0
+    
+    response = http.request('http://test_domain:8001/bags/foo/tiddlers',
+        method='POST', 
+        headers={'Content-type': 'application/x-www-form-urlencoded'},
+        body='title=HelloWorld&field1=foo&field2=bar')[0]
+    assert response.status == 204
+    
+    #now find the tiddler just entered
+    tiddler = Tiddler('HelloWorld', 'foo')
+    try:
+        store.get(tiddler)
+    except NoTiddlerError:
+        raise AssertionError('tiddler was not put into store')
+    
+    #and check the fields
+    assert tiddler.title == 'HelloWorld'
+    assert len(tiddler.fields) == 2
+    assert tiddler.fields['field1'] == 'foo'
+    assert tiddler.fields['field2'] == 'bar'
 
 def test_post_multipart_mime_type():
     """
