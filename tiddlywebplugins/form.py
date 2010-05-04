@@ -56,7 +56,11 @@ def post_tiddler_to_container(environ, start_response):
     except timeout:
         return []
 
-    get_name = lambda: retrieve_item(form, 'title') if 'title' in form else form['file'].filename 
+    def get_name():
+        if 'title' in form:
+            return retrieve_item(form, 'title')
+        else:
+            return form['file'].filename
 
     try:
         tiddler_name = urllib.quote(get_name())
