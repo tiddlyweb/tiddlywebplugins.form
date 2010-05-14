@@ -108,6 +108,51 @@ def test_post_existing():
     assert tiddler.text == 'Changed Text'
     assert tiddler.tags == []
 
+
+def test_post_with_tag_array():
+    """
+    check that tags are properly entered
+    """
+    store = setup_store()
+    setup_web()
+    http = httplib2.Http()
+
+    response = http.request('http://test_domain:8001/bags/foo/tiddlers',
+        method='POST', 
+        headers={'Content-type': 'application/x-www-form-urlencoded'},
+        body='title=HelloWorld&text=Hi%20There&' \
+            'tags=tag1&tags=tag%20with%20spaces')[0]
+    assert response.status == 204
+
+    #now check the tiddler tags
+    tiddler = Tiddler('HelloWorld', 'foo')
+    try:
+        store.get(tiddler)
+    except NoTiddlerError:
+        raise AssertionError('tiddler was not put into store')
+
+    assert len(tiddler.tags) == 4
+    for tag in ['tag1', 'tag','with','spaces']:
+        assert tag in tiddler.tags
+        
+    response = http.request('http://test_domain:8001/bags/foo/tiddlers',
+        method='POST', 
+        headers={'Content-type': 'application/x-www-form-urlencoded'},
+        body='title=HelloWorld&text=Hi%20There&' \
+            'tags=tag1&tags=[[tag%20with%20spaces]]')[0]
+    assert response.status == 204
+
+    #now check the tiddler tags
+    tiddler = Tiddler('HelloWorld', 'foo')
+    try:
+        store.get(tiddler)
+    except NoTiddlerError:
+        raise AssertionError('tiddler was not put into store')
+
+    assert len(tiddler.tags) == 2
+
+        
+        
 def test_post_with_tags():
     """
     check that tags are properly entered
@@ -211,6 +256,14 @@ Content-Disposition: form-data; name="title"
 
 HelloWorld
 -----------------------------168072824752491622650073
+Content-Disposition: form-data; name="tags"
+
+ben
+-----------------------------168072824752491622650073
+Content-Disposition: form-data; name="tags"
+
+jon
+-----------------------------168072824752491622650073
 Content-Disposition: form-data; name="text"
 
 Hi There
@@ -226,3 +279,4 @@ Hi There
 
     assert tiddler.title == 'HelloWorld'
     assert tiddler.text == 'Hi There'
+    assert len(tiddler.tags) == 2
