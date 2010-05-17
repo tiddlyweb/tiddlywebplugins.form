@@ -165,7 +165,13 @@ class Serialization(SerializationInterface):
             tiddler.type = my_file.type
             tiddler.text = my_file.file.read()
             if 'tags' in form:
-                tiddler.tags = self.create_tag_list(retrieve_item(form, 'tags'))
+                if getattr(form, 'getfirst', None):
+                    tags = form.getlist('tags')
+                else:
+                    tags = form['tags']
+                tiddler.tags = []
+                for tag in tags:
+                    tiddler.tags.extend(self.create_tag_list(tag))
         else:
             keys = ['created', 'modified', 'modifier', 'text']
             for key in form:
@@ -173,9 +179,9 @@ class Serialization(SerializationInterface):
                     setattr(tiddler, key, retrieve_item(form, key))
                 elif key == 'tags':
                     if getattr(form, 'getfirst', None):
-                        tags= form.getlist(key)
+                        tags = form.getlist(key)
                     else:
-                        tags= form[key]
+                        tags = form[key]
                     tiddler.tags = []
                     for tag in tags:
                         tiddler.tags.extend(self.create_tag_list(tag))

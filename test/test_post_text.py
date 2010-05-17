@@ -150,6 +150,8 @@ def test_post_with_tag_array():
         raise AssertionError('tiddler was not put into store')
 
     assert len(tiddler.tags) == 2
+    for tag in ['tag1', 'tag with spaces']:
+        assert tag in tiddler.tags
 
         
         
