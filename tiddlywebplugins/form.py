@@ -172,7 +172,13 @@ class Serialization(SerializationInterface):
                 if key in keys:
                     setattr(tiddler, key, retrieve_item(form, key))
                 elif key == 'tags':
-                    tiddler.tags = self.create_tag_list(retrieve_item(form, key))
+                    if getattr(form, 'getfirst', None):
+                        tags= form.getlist(key)
+                    else:
+                        tags= form[key]
+                    tiddler.tags = []
+                    for tag in tags:
+                        tiddler.tags.extend(self.create_tag_list(tag))
                 else:
                     tiddler.fields[key] = retrieve_item(form, key)              
         
