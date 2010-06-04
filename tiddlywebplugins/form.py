@@ -76,6 +76,10 @@ def post_tiddler_to_container(environ, start_response):
         redirect = None
     
     def dummy_start_response(response_code, *args):
+        """
+        start_response may only be called once.
+        We may need it to be a redirect instead of a 204
+        """
         if not response_code.startswith('204'):
             start_response(response_code, *args)
         elif redirect:
