@@ -12,17 +12,11 @@ code is just a replication of TiddlyWeb core with subtle changes to it.
 """
 import logging
 from tiddlyweb.model.bag import Bag
-from tiddlyweb.web.handler.tiddler import \
-        _determine_tiddler, _check_bag_constraint, _validate_tiddler_headers, _validate_tiddler_content, _tiddler_etag
-from tiddlyweb.store import \
-        NoTiddlerError, NoBagError, StoreMethodNotImplemented
+from tiddlyweb.model.tiddler import Tiddler
+from tiddlyweb.web.handler.tiddler import put
 from tiddlyweb.serializer import Serializer, TiddlerFormatError
 from tiddlyweb.serializations import SerializationInterface 
-from tiddlyweb.web.http import \
-        HTTP404, HTTP412, HTTP409, HTTP400
-from tiddlyweb import control
 from tiddlyweb.web import util as web
-from tiddlyweb.model.policy import PermissionsError
 from cgi import FieldStorage
 from socket import timeout
 import re
@@ -68,125 +62,65 @@ def post_tiddler_to_container(environ, start_response):
         tiddler_name = str(uuid4())
     
     environ['wsgiorg.routing_args'][1]['tiddler_name'] = tiddler_name
-    
-    tiddler = _determine_tiddler(environ, control.determine_bag_for_tiddler)
-    
-    return _post_tiddler(environ, start_response, tiddler, form)
-
-def _post_tiddler(environ, start_response, tiddler, form=None):
-    """
-    put the tiddler into the store. 
-    Based on _put_tiddler in tiddlyweb.web.handler.tiddler.
-    """
-    store = environ['tiddlyweb.store']
+    Serialization.form = form
+    environ['REQUEST_METHOD'] = 'PUT'
 
     try:
-        length = environ['CONTENT_LENGTH']
-        content_type = environ['tiddlyweb.type']
-    except KeyError:
-        raise HTTP400('Content-Length and content-type required to put tiddler')
-        
-    try:
-        bag = Bag(tiddler.bag)
-        try:
-            try:
-                revision = store.list_tiddler_revisions(tiddler)[0]
-            except StoreMethodNotImplemented:
-                revision = 1
-            tiddler.revision = revision
-            # These both next will raise exceptions if
-            # the contraints don't match.
-            _check_bag_constraint(environ, bag, 'write')
-            _validate_tiddler_headers(environ, tiddler)
-        except NoTiddlerError:
-            _check_bag_constraint(environ, bag, 'create')
-            incoming_etag = environ.get('HTTP_IF_MATCH', None)
-            if incoming_etag:
-                raise HTTP412('Tiddler does not exist, ETag disallowed.')
-                
-        try:
-            redirect = environ['tiddlyweb.query'].pop('redirect')
-            if '?' in redirect[0] and not redirect[0].endswith('?'):
-                redirect[0] += '&'
-            else:
-                redirect[0] += '?'
-            redirect[0] += '.no-cache=%s' % uuid4()
-        except KeyError:
-            redirect = None
-        if content_type == 'application/x-www-form-urlencoded' or content_type == 'multipart/form-data':
-            if not form:
-                try:
-                    form = get_form(environ)
-                except timeout:
-                    return []
-            serializer = Serializer('tiddlywebplugins.form', environ)
-            serializer.object = tiddler
-            serializer.from_string(form)
+        redirect = environ['tiddlyweb.query'].pop('redirect')
+        if '?' in redirect[0] and not redirect[0].endswith('?'):
+            redirect[0] += '&'
         else:
-            raise HTTP404('Unable to put tiddler, %s. Incorrect Content Type.' % tiddler.title)
-            
-        user = environ['tiddlyweb.usersign']['name']
-        if not user == 'GUEST':
-            tiddler.modifier = user
-                
-        try:
-            _check_bag_constraint(environ, bag, 'accept')
-        except (PermissionsError), exc:
-            _validate_tiddler_content(environ, tiddler)
-        store.put(tiddler)
-    except NoBagError, exc:
-        raise HTTP409("Unable to put tiddler, %s. There is no bag named: " \
-                "%s (%s). Create the bag." %
-                (tiddler.title, tiddler.bag, exc))
-    except NoTiddlerError, exc:
-        raise HTTP404('Unable to put tiddler, %s. %s' % (tiddler.title, exc))
-        
-    etag = ('Etag', _tiddler_etag(environ, tiddler))
-    if etag:
-        response = [etag]
-        
-    if redirect:
-        response.append(('Location', str(redirect[0])))
-        start_response('303 See Other', response)
-    else:
-        response.append(('Location', web.tiddler_url(environ, tiddler)))
-        start_response("204 No Content", response)
+            redirect[0] += '?'
+        redirect[0] += '.no-cache=%s' % uuid4()
+    except KeyError:
+        redirect = None
     
-    return []
+    def dummy_start_response(response_code, *args):
+        if not response_code.startswith('204'):
+            start_response(response_code, *args)
+        elif redirect:
+            response = [('Location', str(redirect[0]))]
+            start_response('303 See Other', response)
+        else:
+            start_response(response_code, *args)
+
+    return put(environ, dummy_start_response)
 
 class Serialization(SerializationInterface):
-    def as_tiddler(self, tiddler, form):
+    def as_tiddler(self, tiddler, input_string=None):
         """
         turn a form input into a tiddler
+        nb: input_string is ignored. You need to set Serialization.form
+        to the form object prior to calling.
         """
-        if 'file' in form and getattr(form['file'], 'file', None): 
-            my_file = form['file']
+        if 'file' in self.form and getattr(self.form['file'], 'file', None): 
+            my_file = self.form['file']
             if not my_file.file: raise TiddlerFormatError
             tiddler.type = my_file.type
             tiddler.text = my_file.file.read()
-            if 'tags' in form:
-                if getattr(form, 'getfirst', None):
-                    tags = form.getlist('tags')
+            if 'tags' in self.form:
+                if getattr(self.form, 'getfirst', None):
+                    tags = self.form.getlist('tags')
                 else:
-                    tags = form['tags']
+                    tags = self.form['tags']
                 tiddler.tags = []
                 for tag in tags:
                     tiddler.tags.extend(self.create_tag_list(tag))
         else:
             keys = ['created', 'modified', 'modifier', 'text']
-            for key in form:
+            for key in self.form:
                 if key in keys:
-                    setattr(tiddler, key, retrieve_item(form, key))
+                    setattr(tiddler, key, retrieve_item(self.form, key))
                 elif key == 'tags':
-                    if getattr(form, 'getfirst', None):
-                        tags = form.getlist(key)
+                    if getattr(self.form, 'getfirst', None):
+                        tags = self.form.getlist(key)
                     else:
-                        tags = form[key]
+                        tags = self.form[key]
                     tiddler.tags = []
                     for tag in tags:
                         tiddler.tags.extend(self.create_tag_list(tag))
                 else:
-                    tiddler.fields[key] = retrieve_item(form, key)              
+                    tiddler.fields[key] = retrieve_item(self.form, key)              
         
         return tiddler
     
@@ -227,9 +161,13 @@ def init(config):
     """
     selector = config['selector']
     
-    update_handler(selector, '/recipes/{recipe_name:segment}/tiddlers[.{format}]', dict(POST=post_tiddler_to_container), config.get('server_prefix', ''))
-    update_handler(selector, '/bags/{bag_name:segment}/tiddlers[.{format}]', dict(POST=post_tiddler_to_container), config.get('server_prefix', ''))
+    update_handler(selector, '/recipes/{recipe_name:segment}/tiddlers[.{format}]',
+        dict(POST=post_tiddler_to_container), config.get('server_prefix', ''))
+    update_handler(selector, '/bags/{bag_name:segment}/tiddlers[.{format}]',
+        dict(POST=post_tiddler_to_container), config.get('server_prefix', ''))
 
     config['extension_types']['form'] = 'application/x-www-form-urlencoded'
-    config['serializers']['application/x-www-form-urlencoded'] = ['form', 'application/x-www-form-urlencoded; charset=UTF-8']
-    config['serializers']['multipart/form-data'] = ['form', 'multipart/form-data; charset=UTF-8']
+    config['serializers']['application/x-www-form-urlencoded'] = \
+        ['tiddlywebplugins.form', 'application/x-www-form-urlencoded; charset=UTF-8']
+    config['serializers']['multipart/form-data'] = \
+        ['tiddlywebplugins.form', 'multipart/form-data; charset=UTF-8']
