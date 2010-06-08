@@ -22,6 +22,7 @@ from socket import timeout
 import re
 import urllib
 from uuid import uuid4
+from StringIO import StringIO
 
 
 def get_form(environ):
@@ -61,10 +62,7 @@ def post_tiddler_to_container(environ, start_response):
     except KeyError:
         tiddler_name = str(uuid4())
     
-    environ['wsgiorg.routing_args'][1]['tiddler_name'] = tiddler_name
     Serialization.form = form
-    environ['REQUEST_METHOD'] = 'PUT'
-
     try:
         redirect = environ['tiddlyweb.query'].pop('redirect')
         if '?' in redirect[0] and not redirect[0].endswith('?'):
@@ -74,7 +72,11 @@ def post_tiddler_to_container(environ, start_response):
         redirect[0] += '.no-cache=%s' % uuid4()
     except KeyError:
         redirect = None
-    
+
+    #mock up some objects that tiddlyweb.web.handler.tiddler.put requires
+    environ['wsgiorg.routing_args'][1]['tiddler_name'] = tiddler_name
+    environ['REQUEST_METHOD'] = 'PUT'
+    environ['wsgi.input'] = StringIO('dummy input')
     def dummy_start_response(response_code, *args):
         """
         start_response may only be called once.
@@ -163,6 +165,8 @@ def init(config):
     register the serializer for Content-Type: application/x-www-form-urlencoded 
     and Content-Type: multipart/form-data 
     """
+    if not 'selector' in config:
+        return
     selector = config['selector']
     
     update_handler(selector, '/recipes/{recipe_name:segment}/tiddlers[.{format}]',
