@@ -3,7 +3,7 @@ AUTHOR = 'Ben Gillies'
 AUTHOR_EMAIL = 'bengillies@gmail.com'
 NAME = 'tiddlywebplugins.form'
 DESCRIPTION = 'Adds POST and binary file upload (via HTML) support to TiddlyWeb'
-VERSION = '0.3'
+VERSION = 'dev'
 
 
 import os
@@ -23,6 +23,6 @@ setup(
     packages = find_packages(exclude='test'),
     author_email = AUTHOR_EMAIL,
     platforms = 'Posix; MacOS X; Windows',
-    install_requires = ['setuptools', 'tiddlyweb'],
+    install_requires = ['setuptools', 'tiddlyweb>=1.1.0'],
     zip_safe = False
     )

@@ -13,6 +13,7 @@ from tiddlywebplugins.utils import get_store
 
 from wsgi_intercept import httplib2_intercept
 import wsgi_intercept
+import httplib2
 
 BAGS = [
     'foo',
@@ -28,22 +29,19 @@ def setup_store():
     initialise a blank store, and fill it with some data
     """
     store = get_store(config)
+
+    for bag in store.list_bags():
+        store.delete(bag)
+
     for bag in BAGS:
         bag = Bag(bag)
-        try:
-            store.delete(bag)
-        except NoBagError:
-            pass
-        
         store.put(bag)
     
+    for recipe in store.list_recipes():
+        store.delete(recipe)
+
     for recipe, contents in RECIPES.iteritems():
         recipe = Recipe(recipe)
-        try:
-            store.delete(recipe)
-        except NoRecipeError:
-            pass
-        
         recipe.set_recipe(contents)
         store.put(recipe)
         

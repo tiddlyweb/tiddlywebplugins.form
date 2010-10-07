@@ -100,3 +100,4 @@ def test_upload_binary_with_meta():
     assert len(tiddler.tags) == 3
     for tag in ['image', 'bitmap', 'test data']:
         assert tag in tiddler.tags
+

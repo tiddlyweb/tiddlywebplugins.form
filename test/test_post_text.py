@@ -200,7 +200,7 @@ def test_post_no_title():
     #now find the tiddler just entered and check it
     bag = Bag('foo')
     bag = store.get(bag)
-    tiddlers = bag.list_tiddlers()
+    tiddlers = [tiddler for tiddler in store.list_bag_tiddlers(bag)]
     
     assert len(tiddlers) == 1
     
@@ -219,7 +219,8 @@ def test_post_fields():
     #make sure there is nothing in bag 'foo'
     bag = Bag('foo')
     bag = store.get(bag)
-    assert len(bag.list_tiddlers()) == 0
+    tiddlers = [tiddler for tiddler in store.list_bag_tiddlers(bag)]
+    assert len(tiddlers) == 0
     
     response = http.request('http://test_domain:8001/bags/foo/tiddlers',
         method='POST', 
