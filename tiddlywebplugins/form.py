@@ -14,6 +14,7 @@ import logging
 from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.tiddler import Tiddler
 from tiddlyweb.web.handler.tiddler import put
+from tiddlyweb.web.http import HTTP400
 from tiddlyweb.serializer import Serializer, TiddlerFormatError
 from tiddlyweb.serializations import SerializationInterface 
 from tiddlyweb.web import util as web
@@ -26,13 +27,16 @@ from StringIO import StringIO
 
 
 def get_form(environ):
-    form = {
-        'application/x-www-form-urlencoded': environ['tiddlyweb.query'],
-        'multipart/form-data': FieldStorage(fp=environ['wsgi.input'], environ=environ)
-    }
-        
+    try:
+        form = {
+            'application/x-www-form-urlencoded': environ['tiddlyweb.query'],
+            'multipart/form-data': FieldStorage(fp=environ['wsgi.input'], environ=environ)
+        }
+    except (ValueError, IOError), exc:
+        raise HTTP400('The was a problem with your syntax. Please check and try again')
+
     return form.get(environ['tiddlyweb.type'])
-    
+
 def retrieve_item(obj, key): 
     if getattr(obj, 'getfirst', None):
         return obj.getfirst(key)

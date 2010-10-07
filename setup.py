@@ -3,7 +3,7 @@ AUTHOR = 'Ben Gillies'
 AUTHOR_EMAIL = 'bengillies@gmail.com'
 NAME = 'tiddlywebplugins.form'
 DESCRIPTION = 'Adds POST and binary file upload (via HTML) support to TiddlyWeb'
-VERSION = 'dev'
+VERSION = '0.4'
 
 
 import os
