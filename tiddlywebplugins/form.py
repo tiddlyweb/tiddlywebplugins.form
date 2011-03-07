@@ -37,7 +37,7 @@ def get_form(environ):
 
     return form.get(environ['tiddlyweb.type'])
 
-def retrieve_item(obj, key): 
+def retrieve_item(obj, key):
     if getattr(obj, 'getfirst', None):
         return obj.getfirst(key)
     else:
@@ -65,7 +65,7 @@ def post_tiddler_to_container(environ, start_response):
         tiddler_name = urllib.quote(get_name())
     except KeyError:
         tiddler_name = str(uuid4())
-    
+
     Serialization.form = form
     try:
         redirect = environ['tiddlyweb.query'].pop('redirect')
@@ -103,7 +103,7 @@ class Serialization(SerializationInterface):
         nb: input_string is ignored. You need to set Serialization.form
         to the form object prior to calling.
         """
-        if 'file' in self.form and getattr(self.form['file'], 'file', None): 
+        if 'file' in self.form and getattr(self.form['file'], 'file', None):
             my_file = self.form['file']
             if not my_file.file: raise TiddlerFormatError
             tiddler.type = my_file.type
@@ -130,10 +130,10 @@ class Serialization(SerializationInterface):
                     for tag in tags:
                         tiddler.tags.extend(self.create_tag_list(tag))
                 else:
-                    tiddler.fields[key] = retrieve_item(self.form, key)              
-        
+                    tiddler.fields[key] = retrieve_item(self.form, key)
+
         return tiddler
-    
+
     def create_tag_list(self, input_string):
         regex = '\[\[([^\]\]]+)\]\]|(\S+)'
         matches = re.findall(regex, input_string)
@@ -146,8 +146,8 @@ class Serialization(SerializationInterface):
 def update_handler(selector, path, new_handler, server_prefix):
     """
     Update an existing path handler in the selector
-    map with new methods (in this case, POST). 
-    
+    map with new methods (in this case, POST).
+
     Taken and modified from tiddlywebplugins
     returns true if match successful
     """
@@ -165,14 +165,14 @@ def init(config):
     """
     add POST handlers to the standard set of URLs.
     nb - revisions not included as POST already exists
-    
+
     register the serializer for Content-Type: application/x-www-form-urlencoded 
-    and Content-Type: multipart/form-data 
+    and Content-Type: multipart/form-data
     """
     if not 'selector' in config:
         return
     selector = config['selector']
-    
+
     update_handler(selector, '/recipes/{recipe_name:segment}/tiddlers[.{format}]',
         dict(POST=post_tiddler_to_container), config.get('server_prefix', ''))
     update_handler(selector, '/bags/{bag_name:segment}/tiddlers[.{format}]',
