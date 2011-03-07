@@ -16,7 +16,7 @@ from tiddlyweb.model.tiddler import Tiddler
 from tiddlyweb.web.handler.tiddler import put
 from tiddlyweb.web.http import HTTP400
 from tiddlyweb.serializer import Serializer, TiddlerFormatError
-from tiddlyweb.serializations import SerializationInterface 
+from tiddlyweb.serializations import SerializationInterface
 from tiddlyweb.web import util as web
 from cgi import FieldStorage
 from socket import timeout
@@ -89,7 +89,7 @@ def post_tiddler_to_container(environ, start_response):
         if not response_code.startswith('204'):
             start_response(response_code, *args)
         elif redirect:
-            response = [('Location', str(redirect[0]))]
+            response = [('Location', redirect[0].encode('UTF-8', 'replace'))]
             start_response('303 See Other', response)
         else:
             start_response(response_code, *args)

@@ -69,3 +69,21 @@ def test_post_redirect_in_body():
     assert tiddler.title == 'HelloWorld'
     assert tiddler.text == 'Hi There'
     assert tiddler.fields.get('redirect', None) == None
+
+def test_unicode_redirect():
+    """
+    redirect to a unicode url
+    """
+    store = setup_store()
+    setup_web()
+    http = httplib2.Http()
+
+    #add a tiddler specifying a redirect that is unicode
+    http.follow_redirects = False
+    response = http.request('http://test_domain:8001/recipes/foobar/tiddlers?redirect=/bags/foo/tiddlers/%E2%82%AC%E2%88%91%C2%AA%C2%A8~%C3%9F',
+        method='POST',
+        headers={'Content-type': 'application/x-www-form-urlencoded'},
+        body='title=HelloWorld&text=Hi%20There')[0]
+
+    #check that we get a 303 response
+    assert response.status == 303
