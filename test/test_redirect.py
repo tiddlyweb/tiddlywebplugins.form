@@ -23,14 +23,14 @@ def test_post_redirect():
     http.follow_redirects = False
     response = http.request('http://test_domain:8001/recipes/foobar/tiddlers' \
         '?redirect=/bags/foo/tiddlers',
-        method='POST', 
+        method='POST',
         headers={'Content-type': 'application/x-www-form-urlencoded'},
         body='title=HelloWorld&text=Hi%20There')[0]
-    
+
     #make sure the redirect has been applied
     assert response.status == 303
     assert response['location'].split('?')[0] == '/bags/foo/tiddlers'
-    
+
     #check the tiddler was saved
     #now check the tiddler tags
     tiddler = Tiddler('HelloWorld', 'bar')
@@ -38,7 +38,7 @@ def test_post_redirect():
         store.get(tiddler)
     except NoTiddlerError:
         raise AssertionError('tiddler was not put into store')
-    
+
     assert tiddler.title == 'HelloWorld'
     assert tiddler.text == 'Hi There'
     assert tiddler.fields.get('redirect', None) == None
@@ -54,7 +54,7 @@ def test_post_redirect_in_body():
     #add a tiddler specifying a redirect
     http.follow_redirects = False
     response = http.request('http://test_domain:8001/recipes/foobar/tiddlers',
-        method='POST', 
+        method='POST',
         headers={'Content-type': 'application/x-www-form-urlencoded'},
         body='title=HelloWorld&text=Hi%20There&redirect=/bags/foo/tiddlers')[0]
 
