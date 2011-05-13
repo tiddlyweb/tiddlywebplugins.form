@@ -103,6 +103,8 @@ class Serialization(SerializationInterface):
         nb: input_string is ignored. You need to set Serialization.form
         to the form object prior to calling.
         """
+        if not getattr(self, 'form', None):
+            raise HTTP400('Form expected, but none found')
         if 'file' in self.form and getattr(self.form['file'], 'file', None):
             my_file = self.form['file']
             if not my_file.file: raise TiddlerFormatError
