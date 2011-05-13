@@ -25,7 +25,7 @@ def test_bad_input_error():
     http = httplib2.Http()
 
     response = http.request('http://test_domain:8001/bags/foo/tiddlers',
-        method='POST', 
+        method='POST',
         headers={'Content-type': 'multipart/form-data'},
         body='title=HelloWorld&text=Hi%20There')[0]
 
