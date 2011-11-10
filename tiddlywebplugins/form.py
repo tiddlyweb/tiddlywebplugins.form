@@ -15,7 +15,7 @@ from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.tiddler import Tiddler
 from tiddlyweb.web.handler.tiddler import put
 from tiddlyweb.web.http import HTTP400
-from tiddlyweb.serializer import Serializer, TiddlerFormatError
+from tiddlyweb.serializer import Serializer, TiddlerFormatError, NoSerializationError
 from tiddlyweb.serializations import SerializationInterface
 from tiddlyweb.web import util as web
 from cgi import FieldStorage
@@ -104,7 +104,7 @@ class Serialization(SerializationInterface):
         to the form object prior to calling.
         """
         if not getattr(self, 'form', None):
-            raise HTTP400('Form expected, but none found')
+            raise NoSerializationError('Form expected, but none found')
         if 'file' in self.form and getattr(self.form['file'], 'file', None):
             my_file = self.form['file']
             if not my_file.file: raise TiddlerFormatError
