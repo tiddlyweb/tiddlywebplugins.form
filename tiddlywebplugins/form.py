@@ -14,7 +14,6 @@ import logging
 from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.tiddler import Tiddler
 from tiddlyweb.web.handler.tiddler import put
-from tiddlyweb.web.http import HTTP400
 from tiddlyweb.serializer import Serializer, TiddlerFormatError, NoSerializationError
 from tiddlyweb.serializations import SerializationInterface
 from tiddlyweb.web import util as web
@@ -24,6 +23,7 @@ import re
 import urllib
 from uuid import uuid4
 from StringIO import StringIO
+from httpexceptor import HTTP400
 
 
 def get_form(environ):

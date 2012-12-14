@@ -23,6 +23,6 @@ setup(
     packages = find_packages(exclude='test'),
     author_email = AUTHOR_EMAIL,
     platforms = 'Posix; MacOS X; Windows',
-    install_requires = ['setuptools', 'tiddlyweb>=1.1.0'],
+    install_requires = ['setuptools', 'httpexceptor', 'tiddlyweb>=1.3.0'],
     zip_safe = False
     )
