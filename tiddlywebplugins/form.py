@@ -26,6 +26,9 @@ from StringIO import StringIO
 from httpexceptor import HTTP400
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 def get_form(environ):
     try:
         form = {
@@ -161,7 +164,7 @@ def update_handler(selector, path, new_handler, server_prefix):
             selector.mappings[index] = (regex, handler)
             return
 
-    logging.debug('%s not found in URL mapping. Not replaced' % path)
+    LOGGER.debug('%s not found in URL mapping. Not replaced' % path)
 
 def init(config):
     """
