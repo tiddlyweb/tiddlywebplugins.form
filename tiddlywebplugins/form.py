@@ -183,7 +183,6 @@ def init(config):
     update_handler(selector, '/bags/{bag_name:segment}/tiddlers[.{format}]',
         dict(POST=post_tiddler_to_container), config.get('server_prefix', ''))
 
-    config['extension_types']['form'] = 'application/x-www-form-urlencoded'
     config['serializers']['application/x-www-form-urlencoded'] = \
         ['tiddlywebplugins.form', 'application/x-www-form-urlencoded; charset=UTF-8']
     config['serializers']['multipart/form-data'] = \
