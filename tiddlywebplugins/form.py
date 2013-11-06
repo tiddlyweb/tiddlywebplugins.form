@@ -124,6 +124,8 @@ class Serialization(SerializationInterface):
         else:
             keys = ['created', 'modified', 'modifier', 'text']
             for key in self.form:
+                if key == 'title':
+                    continue
                 if key in keys:
                     setattr(tiddler, key, retrieve_item(self.form, key))
                 elif key == 'tags':
