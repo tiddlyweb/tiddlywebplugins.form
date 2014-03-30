@@ -4,7 +4,6 @@ goes wrong
 """
 
 from setup_test import setup_store, setup_web
-from tiddlywebplugins.form import get_form
 
 from tiddlyweb.config import config
 from tiddlyweb.model.tiddler import Tiddler

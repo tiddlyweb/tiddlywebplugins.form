@@ -29,22 +29,12 @@ from httpexceptor import HTTP400
 LOGGER = logging.getLogger(__name__)
 
 
-def get_form(environ):
-    try:
-        form = {
-            'application/x-www-form-urlencoded': environ['tiddlyweb.query'],
-            'multipart/form-data': FieldStorage(fp=environ['wsgi.input'], environ=environ)
-        }
-    except (ValueError, IOError), exc:
-        raise HTTP400('The was a problem with your syntax. Please check and try again')
-
-    return form.get(environ['tiddlyweb.type'])
-
 def retrieve_item(obj, key):
     if getattr(obj, 'getfirst', None):
         return obj.getfirst(key)
     else:
         return obj[key][0]
+
 
 def post_tiddler_to_container(environ, start_response):
     """
@@ -53,20 +43,18 @@ def post_tiddler_to_container(environ, start_response):
     we have included the tiddler name in the form,
     so get that and carry on as normal
     """
-    try:
-        form = get_form(environ)
-    except timeout:
-        return []
+    form = environ['tiddlyweb.query']
 
     def get_name():
         if 'title' in form:
             return retrieve_item(form, 'title')
         else:
-            return form['file'].filename
+            files = environ['tiddlyweb.input_files']
+            return files[0].filename
 
     try:
         tiddler_name = urllib.quote(get_name())
-    except KeyError:
+    except (KeyError, IndexError):
         tiddler_name = str(uuid4())
 
     Serialization.form = form
@@ -106,10 +94,11 @@ class Serialization(SerializationInterface):
         nb: input_string is ignored. You need to set Serialization.form
         to the form object prior to calling.
         """
-        if not getattr(self, 'form', None):
+
+        if not hasattr(self, 'form'):
             raise NoSerializationError('Form expected, but none found')
-        if 'file' in self.form and getattr(self.form['file'], 'file', None):
-            my_file = self.form['file']
+        if self.environ.get('tiddlyweb.input_files'):
+            my_file = self.environ['tiddlyweb.input_files'][0]
             if not my_file.file: raise TiddlerFormatError
             tiddler.type = my_file.type
             tiddler.text = my_file.file.read()
