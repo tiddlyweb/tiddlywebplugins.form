@@ -47,6 +47,6 @@ Alternatively, you may want to upload a binary file to the bag "common":
 </form>
 
 
-There is also a Binary Upload Plugin for TiddlyWiki designed specifically to work with tiddlyweplugins.form. You can find it at http://svn.tiddlywiki.org/Trunk/contributors/BenGillies/TiddlyWeb/Plugins/Binary/tiddlers/BinaryUploadPlugin.tid
+There is also a Binary Upload Plugin for TiddlyWiki designed specifically to work with tiddlyweplugins.form. You can find it at https://raw.githubusercontent.com/TiddlySpace/tiddlyspace/master/src/plugins/BinaryUploadPlugin.js
 
-You can find the source code at https://github.com/bengillies/tiddlywebplugins.form
+You can find the source code at https://github.com/tiddlyweb/tiddlywebplugins.form
