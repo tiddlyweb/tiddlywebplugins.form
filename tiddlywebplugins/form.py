@@ -11,6 +11,7 @@ requires the content type to be text/plain or application/json only, hence most 
 code is just a replication of TiddlyWeb core with subtle changes to it.
 """
 import logging
+from tiddlyweb.fixups import quote
 from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.tiddler import Tiddler
 from tiddlyweb.web.handler.tiddler import put
@@ -53,20 +54,24 @@ def post_tiddler_to_container(environ, start_response):
             return files[0].filename
 
     try:
-        tiddler_name = urllib.quote(get_name())
+        tiddler_name = get_name()
     except (KeyError, IndexError):
         tiddler_name = str(uuid4())
 
     Serialization.form = form
     try:
         redirect = environ['tiddlyweb.query'].pop('redirect')
-        if '?' in redirect[0] and not redirect[0].endswith('?'):
-            redirect[0] += '&'
-        else:
-            redirect[0] += '?'
-        redirect[0] += '.no-cache=%s' % uuid4()
     except KeyError:
         redirect = None
+    if redirect:
+        redirect = redirect[0]
+        if '?' in redirect and not redirect.endswith('?'):
+            redirect += '&'
+        else:
+            redirect += '?'
+        redirect += '.no-cache=%s' % uuid4()
+        # Extra safe characters used to preserve query strings.
+        redirect = quote(redirect.encode('utf-8'), safe="/?&=:.!~*'()")
 
     #mock up some objects that tiddlyweb.web.handler.tiddler.put requires
     environ['wsgiorg.routing_args'][1]['tiddler_name'] = tiddler_name
@@ -80,7 +85,7 @@ def post_tiddler_to_container(environ, start_response):
         if not response_code.startswith('204'):
             start_response(response_code, *args)
         elif redirect:
-            response = [('Location', redirect[0].encode('UTF-8', 'replace'))]
+            response = [('Location', redirect)]
             start_response('303 See Other', response)
         else:
             start_response(response_code, *args)
